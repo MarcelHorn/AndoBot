@@ -1,12 +1,22 @@
 import discord
-import os
 import requests
 import json
+import youtube_dl
 
+import asyncio
+import functools
+import itertools
+import math
+import random
+import os
+
+from async_timeout import timeout
 from keep_alive import keep_alive
+from discord.ext import commands
+
+client = commands.Bot(command_prefix = "!")
 
 
-client = discord.Client()
 
 #Courage quote function
 def get_quote():
@@ -72,35 +82,28 @@ async def on_ready():
     #await message.add_reaction('🇿')
 ###
 #
-@client.event
-async def on_message(message):
-  
-  if message.author == client.user:
-      return
-  
-  member = message.author
-  dev_role = discord.utils.get(member.guild.roles, name="Dev Team")
-  #bot-dev-Commands
-  if message.content.startswith("!id"):
-    if dev_role not in member.roles :
-      await message.channel.send("You have no permission for this command, sorry.")
-    else: 
-      await message.channel.send("Channel ID: " + str(message.channel.id) +", User-ID: " + str(member.id))
-  ###
-  #bot-commands
-  if message.channel.id == 851128177366925332 or message.channel.id == 769815939696033792:    
-    if message.content.startswith("!hello"):
-      await message.channel.send("Hello!")
-      return
-    
-    if message.content.startswith("!quote"):
-      quote = get_quote()
-      await message.channel.send(quote)
 
-    if message.content.startswith("!joke"):
-      joke = get_joke()
-      await message.channel.send(joke)
 
+@commands.command(name='joke', aliases=['witz'], pass_context=True)
+@commands.has_permissions(manage_guild=True)
+async def _joke(ctx):
+  channel = ctx.channel
+  if channel.id == 851128177366925332:
+    joke = get_joke()
+    await ctx.send(joke)
+
+@commands.command(name='quote', pass_context=True)
+@commands.has_permissions(manage_guild=True)
+async def _quote(ctx):
+  channel = ctx.channel
+  if channel.id == 851128177366925332:
+    quote = get_quote()
+    await ctx.send(quote)
+
+
+
+client.add_command(_joke)
+client.add_command(_quote)
 
 token = os.environ['TOKEN']
 
