@@ -581,6 +581,26 @@ class ApiCommands(commands.Cog, name = "Bot-channel"):
         quote = self.get_quote()
         await ctx.send(quote)
 
+  @commands.command(name='msg_c', pass_context=True, hidden=True)
+  @commands.has_permissions(manage_guild=True)
+  async def _msg_c(self, ctx, msg: str, chnl :str):
+    channel = discord.utils.get(ctx.guild.channels, name=chnl)
+    if channel is not None:
+      await channel.send(msg)
+      return
+    await ctx.send("Channel nicht gefunden!")
+
+
+  @commands.command(name='msg_u', pass_context=True, hidden=True)
+  @commands.has_permissions(manage_guild=True)
+  async def _msg_u(self, ctx, msg: str, user : int):
+    user = await client.fetch_user(user)
+    if user is not None:
+      await user.send(msg)
+    else: 
+      await ctx.send("Name nicht gefunden!")
+
+
 client.add_cog(Musik(client))
 
 client.add_cog(ApiCommands(client))
