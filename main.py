@@ -14,23 +14,11 @@ from async_timeout import timeout
 from keep_alive import keep_alive
 from discord.ext import commands
 
-client = commands.Bot(command_prefix = "!")
+client = commands.Bot(command_prefix = "!", description='AndoBot, folgende Commands sind mit vorangehendem "!" verfügbar. Bitte beachten, dass diese nur in den jeweiligen Kanälen funktionieren.')
 
+BOT_CHANNEL = "bot_channel"
+MUSIC_CHANNEL = "Jukebox"
 
-
-#Courage quote function
-def get_quote():
-  response = requests.get("https://zenquotes.io/api/random")
-  json_data = json.loads(response.text)
-  quote = json_data[0]["q"] + " -" + json_data[0]["a"]
-  return quote
-###
-#joke function
-def get_joke():
-  response = requests.get("https://official-joke-api.appspot.com/random_joke")
-  json_data = json.loads(response.text)
-  joke = json_data["setup"]+ " -" + json_data["punchline"]
-  return joke
 ###
 #Role assign function
 @client.event
@@ -84,21 +72,7 @@ async def on_ready():
 #
 
 
-@commands.command(name='joke', aliases=['witz'], pass_context=True)
-async def _joke(ctx):
-  """Erzählt einen sehr guten Witz."""
-  channel = ctx.channel
-  if channel.id == 851128177366925332:
-    joke = get_joke()
-    await ctx.send(joke)
 
-@commands.command(name='quote', pass_context=True)
-async def _quote(ctx):
-  """Gibt ein aufheiterndes Zitat ab."""
-  channel = ctx.channel
-  if channel.id == 851128177366925332:
-    quote = get_quote()
-    await ctx.send(quote)
 
 # Silence useless bug reports messages
 youtube_dl.utils.bug_reports_message = lambda: ''
@@ -106,12 +80,8 @@ youtube_dl.utils.bug_reports_message = lambda: ''
 
 class VoiceError(Exception):
     pass
-
-
 class YTDLError(Exception):
     pass
-
-
 class YTDLSource(discord.PCMVolumeTransformer):
     YTDL_OPTIONS = {
         'format': 'bestaudio/best',
@@ -219,8 +189,6 @@ class YTDLSource(discord.PCMVolumeTransformer):
             duration.append('{} Sekunden'.format(seconds))
 
         return ', '.join(duration)
-
-
 class Song:
     __slots__ = ('source', 'requester')
 
@@ -345,7 +313,7 @@ class VoiceState:
             self.voice = None
 
 
-class Music(commands.Cog):
+class Musik(commands.Cog, name = "Jukebox"):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.voice_states = {}
@@ -402,7 +370,6 @@ class Music(commands.Cog):
         ctx.voice_state.voice = await destination.connect()
 
     @commands.command(name='leave', aliases=['disconnect'])
-    @commands.has_permissions(manage_guild=True)
     async def _leave(self, ctx: commands.Context):
         """Bot verlässt den Sprachkanal, Playlist wird geleert."""
 
@@ -432,7 +399,6 @@ class Music(commands.Cog):
         await ctx.send(embed=ctx.voice_state.current.create_embed())
 
     @commands.command(name='pause')
-    @commands.has_permissions(manage_guild=True)
     async def _pause(self, ctx: commands.Context):
         """Pausiert die Audiowiedergabe."""
 
@@ -441,7 +407,6 @@ class Music(commands.Cog):
             await ctx.message.add_reaction('⏯')
 
     @commands.command(name='resume')
-    @commands.has_permissions(manage_guild=True)
     async def _resume(self, ctx: commands.Context):
         """Setzt die Audiowiedergabe fort."""
 
@@ -450,7 +415,6 @@ class Music(commands.Cog):
             await ctx.message.add_reaction('⏯')
 
     @commands.command(name='stop')
-    @commands.has_permissions(manage_guild=True)
     async def _stop(self, ctx: commands.Context):
         """Stoppt die Musik und leert die Playlist."""
 
@@ -463,7 +427,7 @@ class Music(commands.Cog):
     @commands.command(name='skip')
     async def _skip(self, ctx: commands.Context):
         """Stimme für einen Skip ab. Der "Requester" kann sofort skippen.
-        3 skip votes are needed for the song to be skipped.
+        
         """
 
         if not ctx.voice_state.is_playing:
@@ -491,7 +455,7 @@ class Music(commands.Cog):
     async def _queue(self, ctx: commands.Context, *, page: int = 1):
         """Zeigt die Playlist.
 
-        You can optionally specify the page to show. Each page contains 10 elements.
+        
         """
 
         if len(ctx.voice_state.songs) == 0:
@@ -547,7 +511,7 @@ class Music(commands.Cog):
 
     @commands.command(name='play')
     async def _play(self, ctx: commands.Context, *, search: str):
-        """Fügt ein Song in die Playlist (Youtube Link angeben!).
+        """Fügt ein Song in die Playlist ein (Youtube Link angeben!).
         """
 
         if not ctx.voice_state.voice:
@@ -575,12 +539,52 @@ class Music(commands.Cog):
                 raise commands.CommandError('Bot ist bereits in einem Sprachkanal.')
 
 
-#bot = commands.Bot('music.', description='Yet another music bot.')
+class ApiCommands(commands.Cog, name = "Bot-channel"):
+#Courage quote function
+  def __init__(self, bot: commands.Bot):
+        self.bot = bot
+        
+ 
+  def get_quote(self):
+    response = requests.get("https://zenquotes.io/api/random")
+    json_data = json.loads(response.text)
+    quote = json_data[0]["q"] + " -" + json_data[0]["a"]
+    return quote
+###
+#joke function
+  def get_joke(self):
+    response = requests.get("https://official-joke-api.appspot.com/random_joke")
+    json_data = json.loads(response.text)
+    joke = json_data["setup"]+ " -" + json_data["punchline"]
+    return joke
 
-client.add_cog(Music(client))
+  @commands.command(name='joke', aliases=['witz'], pass_context=True)
+  async def _joke(self, ctx):
+    """Erzählt einen sehr guten Witz."""
+  
+    apiCommand = self.bot.get_cog('Bot-channel')
+    if apiCommand is not None:
+      channel = ctx.channel
+      if channel.name == BOT_CHANNEL:
+        joke = self.get_joke()
+        await ctx.send(joke)
+    
 
-client.add_command(_joke)
-client.add_command(_quote)
+  @commands.command(name='quote', pass_context=True)
+  async def _quote(self, ctx):
+    """Gibt ein aufheiterndes Zitat ab."""
+
+    apiCommand = self.bot.get_cog('Bot-channel')
+    if apiCommand is not None:
+      channel = ctx.channel
+      if channel.name == BOT_CHANNEL:
+        quote = self.get_quote()
+        await ctx.send(quote)
+
+client.add_cog(Musik(client))
+
+client.add_cog(ApiCommands(client))
+#client.add_command(_quote)
 
 token = os.environ['TOKEN']
 
