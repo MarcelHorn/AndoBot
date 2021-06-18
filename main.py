@@ -16,17 +16,17 @@ from discord.ext import commands
 
 client = commands.Bot(command_prefix = "!", description='AndoBot, folgende Commands sind mit vorangehendem "!" verfügbar. Bitte beachten, dass diese nur in den jeweiligen Kanälen funktionieren.')
 
-BOT_CHANNEL = "bot_channel"
-MUSIC_CHANNEL = "Jukebox"
+BOT_CHANNEL_ID = 851128177366925332
+MUSIC_CHANNEL_ID = 855150898380275753
+ASSIGN_ROLE_CHANNEL_ID = 852611783696711701
 
 ###
 #Role assign function
 @client.event
 async def on_raw_reaction_add(payload):
-  ChID = 852611783696711701 
   guild_id = payload.guild_id
   guild = discord.utils.find(lambda g : g.id == guild_id, client.guilds)
-  if payload.channel_id != ChID:
+  if payload.channel_id != ASSIGN_ROLE_CHANNEL_ID:
         return
   member = await(await client.fetch_guild(payload.guild_id)).fetch_member(payload.user_id)
   if member is not None:
@@ -42,10 +42,9 @@ async def on_raw_reaction_add(payload):
 #Role remove function
 @client.event
 async def on_raw_reaction_remove(payload):
-  ChID = 852611783696711701 
   guild_id = payload.guild_id
   guild = discord.utils.find(lambda g : g.id == guild_id, client.guilds)
-  if payload.channel_id != ChID:
+  if payload.channel_id != ASSIGN_ROLE_CHANNEL_ID:
         return
   member = await(await client.fetch_guild(payload.guild_id)).fetch_member(payload.user_id)
   if member is not None:
@@ -340,12 +339,14 @@ class Musik(commands.Cog, name = "Jukebox"):
         ctx.voice_state = self.get_voice_state(ctx)
 
     async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
-        await ctx.send('Ein Fehler ist aufgetreten: {}'.format(str(error)))
+        print('Ein Fehler ist aufgetreten: {}'.format(str(error)) + "\nUser: " + ctx.author.name + "\nChannel: " + ctx.channel.name)
+        #await ctx.send('Ein Fehler ist aufgetreten: {}'.format(str(error)))
 
     @commands.command(name='join', invoke_without_subcommand=True)
     async def _join(self, ctx: commands.Context):
         """Schiebt den Bot in deinen Voice Channel."""
-
+        if ctx.channel.id != MUSIC_CHANNEL_ID:
+          return
         destination = ctx.author.voice.channel
         if ctx.voice_state.voice:
             await ctx.voice_state.voice.move_to(destination)
@@ -358,7 +359,7 @@ class Musik(commands.Cog, name = "Jukebox"):
     async def _summon(self, ctx: commands.Context, *, channel: discord.VoiceChannel = None):
         """Zwingt den Bot in deinen Sprachchannel (Mod).
         """
-
+        
         if not channel and not ctx.author.voice:
             raise VoiceError('You are neither connected to a voice channel nor specified a channel to join.')
 
@@ -372,7 +373,8 @@ class Musik(commands.Cog, name = "Jukebox"):
     @commands.command(name='leave', aliases=['disconnect'])
     async def _leave(self, ctx: commands.Context):
         """Bot verlässt den Sprachkanal, Playlist wird geleert."""
-
+        if ctx.channel.id != MUSIC_CHANNEL_ID:
+          return
         if not ctx.voice_state.voice:
             return await ctx.send('Der Bot ist nicht in einem Sprachkanal.')
 
@@ -395,13 +397,15 @@ class Musik(commands.Cog, name = "Jukebox"):
     @commands.command(name='now', aliases=['current', 'playing'])
     async def _now(self, ctx: commands.Context):
         """Zeigt das derzeit abgespielte Lied an."""
-
+        if ctx.channel.id != MUSIC_CHANNEL_ID:
+          return
         await ctx.send(embed=ctx.voice_state.current.create_embed())
 
     @commands.command(name='pause')
     async def _pause(self, ctx: commands.Context):
         """Pausiert die Audiowiedergabe."""
-
+        if ctx.channel.id != MUSIC_CHANNEL_ID:
+          return
         if ctx.voice_state.is_playing and ctx.voice_state.voice.is_playing():
             ctx.voice_state.voice.pause()
             await ctx.message.add_reaction('⏯')
@@ -409,7 +413,8 @@ class Musik(commands.Cog, name = "Jukebox"):
     @commands.command(name='resume')
     async def _resume(self, ctx: commands.Context):
         """Setzt die Audiowiedergabe fort."""
-
+        if ctx.channel.id != MUSIC_CHANNEL_ID:
+          return
         if ctx.voice_state.is_playing and ctx.voice_state.voice.is_paused():
             ctx.voice_state.voice.resume()
             await ctx.message.add_reaction('⏯')
@@ -417,7 +422,8 @@ class Musik(commands.Cog, name = "Jukebox"):
     @commands.command(name='stop')
     async def _stop(self, ctx: commands.Context):
         """Stoppt die Musik und leert die Playlist."""
-
+        if ctx.channel.id != MUSIC_CHANNEL_ID:
+          return
         ctx.voice_state.songs.clear()
 
         if ctx.voice_state.is_playing:
@@ -429,7 +435,8 @@ class Musik(commands.Cog, name = "Jukebox"):
         """Stimme für einen Skip ab. Der "Requester" kann sofort skippen.
         
         """
-
+        if ctx.channel.id != MUSIC_CHANNEL_ID:
+          return
         if not ctx.voice_state.is_playing:
             return await ctx.send('Es wird keine Musik abgespielt...')
 
@@ -457,7 +464,8 @@ class Musik(commands.Cog, name = "Jukebox"):
 
         
         """
-
+        if ctx.channel.id != MUSIC_CHANNEL_ID:
+          return
         if len(ctx.voice_state.songs) == 0:
             return await ctx.send('Leer.')
 
@@ -478,7 +486,8 @@ class Musik(commands.Cog, name = "Jukebox"):
     @commands.command(name='shuffle')
     async def _shuffle(self, ctx: commands.Context):
         """Mischt die Playlist."""
-
+        if ctx.channel.id != MUSIC_CHANNEL_ID:
+          return
         if len(ctx.voice_state.songs) == 0:
             return await ctx.send('leer.')
 
@@ -488,7 +497,8 @@ class Musik(commands.Cog, name = "Jukebox"):
     @commands.command(name='remove')
     async def _remove(self, ctx: commands.Context, index: int):
         """Entfernt Song aus Playlist (Index angeben)."""
-
+        if ctx.channel.id != MUSIC_CHANNEL_ID:
+          return
         if len(ctx.voice_state.songs) == 0:
             return await ctx.send('leer.')
 
@@ -501,7 +511,8 @@ class Musik(commands.Cog, name = "Jukebox"):
 
         Nochmal ausgeben, um die Schleife zu beenden.
         """
-
+        if ctx.channel.id != MUSIC_CHANNEL_ID:
+          return
         if not ctx.voice_state.is_playing:
             return await ctx.send('Es wird gerade nichts abgespielt.')
 
@@ -513,7 +524,8 @@ class Musik(commands.Cog, name = "Jukebox"):
     async def _play(self, ctx: commands.Context, *, search: str):
         """Fügt ein Song in die Playlist ein (Youtube Link angeben!).
         """
-
+        if ctx.channel.id != MUSIC_CHANNEL_ID:
+          return
         if not ctx.voice_state.voice:
             await ctx.invoke(self._join)
 
@@ -564,8 +576,8 @@ class ApiCommands(commands.Cog, name = "Bot-channel"):
   
     apiCommand = self.bot.get_cog('Bot-channel')
     if apiCommand is not None:
-      channel = ctx.channel
-      if channel.name == BOT_CHANNEL:
+      channel_id = ctx.channel.id
+      if channel_id == BOT_CHANNEL_ID:
         joke = self.get_joke()
         await ctx.send(joke)
     
@@ -576,8 +588,8 @@ class ApiCommands(commands.Cog, name = "Bot-channel"):
 
     apiCommand = self.bot.get_cog('Bot-channel')
     if apiCommand is not None:
-      channel = ctx.channel
-      if channel.name == BOT_CHANNEL:
+      channel_id = ctx.channel.id
+      if channel_id == BOT_CHANNEL_ID:
         quote = self.get_quote()
         await ctx.send(quote)
 
