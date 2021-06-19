@@ -14,11 +14,12 @@ from async_timeout import timeout
 from keep_alive import keep_alive
 from discord.ext import commands
 
-client = commands.Bot(command_prefix = "!", description='AndoBot, folgende Commands sind mit vorangehendem "!" verfügbar. Bitte beachten, dass diese nur in den jeweiligen Kanälen funktionieren.')
+client = commands.Bot(command_prefix = "!", description='AndoBot, folgende Befehle sind mit !<Befehl> verfügbar. Bitte beachten, dass diese nur in den jeweiligen Kanälen funktionieren.')
+
 
 BOT_CHANNEL_ID = 851128177366925332
 MUSIC_CHANNEL_ID = 855150898380275753
-ASSIGN_ROLE_CHANNEL_ID = 852611783696711701
+ASSIGN_ROLE_MESSAGE_ID = 852646486037495900
 
 ###
 #Role assign function
@@ -26,7 +27,7 @@ ASSIGN_ROLE_CHANNEL_ID = 852611783696711701
 async def on_raw_reaction_add(payload):
   guild_id = payload.guild_id
   guild = discord.utils.find(lambda g : g.id == guild_id, client.guilds)
-  if payload.channel_id != ASSIGN_ROLE_CHANNEL_ID:
+  if payload.message_id != ASSIGN_ROLE_MESSAGE_ID:
         return
   member = await(await client.fetch_guild(payload.guild_id)).fetch_member(payload.user_id)
   if member is not None:
@@ -44,7 +45,7 @@ async def on_raw_reaction_add(payload):
 async def on_raw_reaction_remove(payload):
   guild_id = payload.guild_id
   guild = discord.utils.find(lambda g : g.id == guild_id, client.guilds)
-  if payload.channel_id != ASSIGN_ROLE_CHANNEL_ID:
+  if payload.message_id != ASSIGN_ROLE_MESSAGE_ID:
         return
   member = await(await client.fetch_guild(payload.guild_id)).fetch_member(payload.user_id)
   if member is not None:
@@ -312,7 +313,7 @@ class VoiceState:
             self.voice = None
 
 
-class Musik(commands.Cog, name = "Jukebox"):
+class Musik(commands.Cog, name = "jukebox"):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.voice_states = {}
@@ -344,7 +345,9 @@ class Musik(commands.Cog, name = "Jukebox"):
 
     @commands.command(name='join', invoke_without_subcommand=True)
     async def _join(self, ctx: commands.Context):
-        """Schiebt den Bot in deinen Voice Channel."""
+        """Schiebt den Bot in deinen Voice Channel.
+        """
+        
         if ctx.channel.id != MUSIC_CHANNEL_ID:
           return
         destination = ctx.author.voice.channel
@@ -521,8 +524,9 @@ class Musik(commands.Cog, name = "Jukebox"):
         await ctx.message.add_reaction('✅')
 
     @commands.command(name='play')
-    async def _play(self, ctx: commands.Context, *, search: str):
+    async def _play(self, ctx: commands.Context, *, url: str):
         """Fügt ein Song in die Playlist ein (Youtube Link angeben!).
+        Keine Livestream-URLs angeben, andernfalls muss der Bot aus dem Voice Channel gekickt und wieder eingeladen werden!
         """
         if ctx.channel.id != MUSIC_CHANNEL_ID:
           return
@@ -531,7 +535,7 @@ class Musik(commands.Cog, name = "Jukebox"):
 
         async with ctx.typing():
             try:
-                source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
+                source = await YTDLSource.create_source(ctx, url, loop=self.bot.loop)
             except YTDLError as e:
                 await ctx.send('Fehler bei der Anfrage: {}'.format(str(e)))
             else:
@@ -551,7 +555,7 @@ class Musik(commands.Cog, name = "Jukebox"):
                 raise commands.CommandError('Bot ist bereits in einem Sprachkanal.')
 
 
-class ApiCommands(commands.Cog, name = "Bot-channel"):
+class ApiCommands(commands.Cog, name = "bot-channel"):
 #Courage quote function
   def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -572,9 +576,9 @@ class ApiCommands(commands.Cog, name = "Bot-channel"):
 
   @commands.command(name='joke', aliases=['witz'], pass_context=True)
   async def _joke(self, ctx):
-    """Erzählt einen sehr guten Witz."""
+    """Erzählt einen sehr guten Witz. (Englisch)"""
   
-    apiCommand = self.bot.get_cog('Bot-channel')
+    apiCommand = self.bot.get_cog('bot-channel')
     if apiCommand is not None:
       channel_id = ctx.channel.id
       if channel_id == BOT_CHANNEL_ID:
@@ -584,9 +588,9 @@ class ApiCommands(commands.Cog, name = "Bot-channel"):
 
   @commands.command(name='quote', pass_context=True)
   async def _quote(self, ctx):
-    """Gibt ein aufheiterndes Zitat ab."""
+    """Gibt ein aufheiterndes Zitat ab. (Englisch)"""
 
-    apiCommand = self.bot.get_cog('Bot-channel')
+    apiCommand = self.bot.get_cog('bot-channel')
     if apiCommand is not None:
       channel_id = ctx.channel.id
       if channel_id == BOT_CHANNEL_ID:
@@ -612,9 +616,7 @@ class ApiCommands(commands.Cog, name = "Bot-channel"):
     else: 
       await ctx.send("Name nicht gefunden!")
 
-
 client.add_cog(Musik(client))
-
 client.add_cog(ApiCommands(client))
 #client.add_command(_quote)
 
