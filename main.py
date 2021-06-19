@@ -17,9 +17,9 @@ from discord.ext import commands
 client = commands.Bot(command_prefix = "!", description='AndoBot, folgende Befehle sind mit !<Befehl> verfügbar. Bitte beachten, dass diese nur in den jeweiligen Kanälen funktionieren.')
 
 
-BOT_CHANNEL_ID = 851128177366925332
-MUSIC_CHANNEL_ID = 855150898380275753
-ASSIGN_ROLE_MESSAGE_ID = 852646486037495900
+BOT_CHANNEL_ID = 762336254133534731
+MUSIC_CHANNEL_ID = 855884940524781588
+ASSIGN_ROLE_MESSAGE_ID = 855889788477243402
 
 ###
 #Role assign function
