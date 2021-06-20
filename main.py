@@ -14,7 +14,7 @@ from async_timeout import timeout
 from keep_alive import keep_alive
 from discord.ext import commands
 
-client = commands.Bot(command_prefix = "!", description='AndoBot, folgende Befehle sind mit !<Befehl> verfügbar. Bitte beachten, dass diese nur in den jeweiligen Kanälen funktionieren.')
+client = commands.Bot(command_prefix = "!", description='Folgende Befehle sind mit !<Befehl> verfügbar. Bitte beachten, dass diese nur in den jeweiligen Kanälen funktionieren.')
 
 
 BOT_CHANNEL_ID = 762336254133534731
@@ -31,12 +31,12 @@ async def on_raw_reaction_add(payload):
         return
   member = await(await client.fetch_guild(payload.guild_id)).fetch_member(payload.user_id)
   if member is not None:
-    if payload.emoji.name == "🏹":
+    if payload.emoji.name == "🐉":
       mh = discord.utils.get(guild.roles, name="Monster Hunter")
       await member.add_roles(mh)
-    if payload.emoji.name == "🇿":
-      zelda = discord.utils.get(guild.roles, name="Zelda Randomizer")
-      await member.add_roles(zelda)
+    if payload.emoji.name == "🎲":
+      community = discord.utils.get(guild.roles, name="StruggleDudes")
+      await member.add_roles(community)
   else: 
     print("Member not found")
 ###
@@ -49,12 +49,12 @@ async def on_raw_reaction_remove(payload):
         return
   member = await(await client.fetch_guild(payload.guild_id)).fetch_member(payload.user_id)
   if member is not None:
-    if payload.emoji.name == "🏹":
+    if payload.emoji.name == "🐉":
       mh = discord.utils.get(guild.roles, name="Monster Hunter")
       await member.remove_roles(mh)
-    if payload.emoji.name == "🇿":
-      zelda = discord.utils.get(guild.roles, name="Zelda Randomizer")
-      await member.remove_roles(zelda)
+    if payload.emoji.name == "🎲":
+      community = discord.utils.get(guild.roles, name="StruggleDudes")
+      await member.remove_roles(community)
   else: 
     print("Member not found")
 ###
@@ -62,21 +62,10 @@ async def on_raw_reaction_remove(payload):
 @client.event
 async def on_ready():
     print("We have logged in as {0.user}".format(client))
-    #assign_channel = discord.utils.get(client.get_all_channels(), id=852611783696711701)
-    #await assign_channel.purge()
-    #Text= ": Assign Role by reaction \n\n 🏹:    Monster Hunter \n 🇿:    Zelda Randomizer \n  \n____________ "
-    #message = await assign_channel.send(Text)
-    #await message.add_reaction("🏹")
-    #await message.add_reaction('🇿')
-###
-#
-
-
-
-
+    
+    
 # Silence useless bug reports messages
 youtube_dl.utils.bug_reports_message = lambda: ''
-
 
 class VoiceError(Exception):
     pass
@@ -180,12 +169,24 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
         duration = []
         if days > 0:
+          if days == 1:
+            duration.append('{} Tag'.format(days))
+          else:
             duration.append('{} Tage'.format(days))
         if hours > 0:
+          if hours == 1:
+            duration.append('{} Stunde'.format(hours))
+          else:
             duration.append('{} Stunden'.format(hours))
         if minutes > 0:
+          if minutes == 1:
+            duration.append('{} Minute'.format(minutes))
+          else:
             duration.append('{} Minuten'.format(minutes))
         if seconds > 0:
+          if seconds == 1:
+            duration.append('{} Sekunde'.format(seconds))
+          else:
             duration.append('{} Sekunden'.format(seconds))
 
         return ', '.join(duration)
